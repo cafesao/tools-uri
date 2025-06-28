@@ -2,8 +2,15 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5"
+      version = "~> 5.10"
     }
+  }
+
+  backend "s3" {
+    bucket = "my-cafesao-terraform-state"
+    key    = "tools-uri/terraform.tfstate"
+    region = "us-east-1"
+    profile = "personal"
   }
 
   required_version = ">= 1.2.0"

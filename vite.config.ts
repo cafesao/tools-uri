@@ -11,4 +11,9 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    watch: {
+      ignored: ["infra/*.tfstate", "infra/*.tfstate.backup", "infra/*.tf"],
+    },
+  },
 });
