@@ -92,23 +92,38 @@ module "template_files" {
   source = "hashicorp/dir/template"
 
   base_dir = "${path.module}/../dist"
-
 }
+
+locals {
+  # Mapeia extensões de arquivo para seus tipos de conteúdo (MIME types).
+  mime_types = {
+    "css"  = "text/css"
+    "html" = "text/html"
+    "js"   = "application/javascript"
+    "svg"  = "image/svg+xml"
+  }
+}
+
 resource "aws_s3_object" "bucket-tools-uri-object" {
   bucket = aws_s3_bucket.bucket-tools-uri.bucket
+
+  # Itera sobre todos os arquivos encontrados pelo módulo 'dir/template'.
   for_each = module.template_files.files
-  key          = each.key
-  content_type = each.value.content_type
 
-  # The template_files module guarantees that only one of these two attributes
-  # will be set for each file, depending on whether it is an in-memory template
-  # rendering result or a static file on disk.
-  source  = each.value.source_path
-  content = each.value.content
+  # A chave do objeto no S3 é o nome do arquivo sem a extensão '.gz', se houver.
+  key = trimsuffix(each.key, ".gz")
 
-  # Unless the bucket has encryption enabled, the ETag of each object is an
-  # MD5 hash of that object.
-  etag = each.value.digests.md5
+  # Define o tipo de conteúdo com base na extensão do arquivo *original*.
+  content_type = lookup(local.mime_types, regex("\\.([^.]+)$", trimsuffix(each.key, ".gz"))[0], "application/octet-stream")
+
+  # Define o Content-Encoding como 'gzip' se o arquivo for comprimido.
+  content_encoding = endswith(each.key, ".gz") ? "gzip" : null
+
+  # Define a política de cache. Arquivos com hash são imutáveis.
+  cache_control = strcontains(trimsuffix(each.key, ".gz"), "-") ? "public, max-age=31536000, immutable" : "public, max-age=0, must-revalidate"
+
+  # Usa o arquivo do disco como fonte. O Terraform gerencia o ETag.
+  source = each.value.source_path
 }
 
 data "aws_route53_zone" "cafesao-zone" {
