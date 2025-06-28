@@ -2,6 +2,8 @@
 
 Uma ferramenta simples e rápida para codificar, decodificar e analisar URIs e seus parâmetros.
 
+Site: [tools-uri.cafesao.net](http://tools-uri.cafesao.net)
+
 ## Tecnologias
 
 - **Frontend**: React com Vite, TypeScript e Tailwind CSS
