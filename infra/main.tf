@@ -107,23 +107,23 @@ locals {
 resource "aws_s3_object" "bucket-tools-uri-object" {
   bucket = aws_s3_bucket.bucket-tools-uri.bucket
 
-  # Itera sobre todos os arquivos encontrados pelo módulo 'dir/template'.
   for_each = module.template_files.files
 
-  # A chave do objeto no S3 é o nome do arquivo sem a extensão '.gz', se houver.
+  # A chave do objeto no S3 é o nome do arquivo sem a extensão '.gz'.
   key = trimsuffix(each.key, ".gz")
 
-  # Define o tipo de conteúdo com base na extensão do arquivo *original*.
+  # O tipo de conteúdo é baseado na extensão do arquivo *original*.
   content_type = lookup(local.mime_types, regex("\\.([^.]+)$", trimsuffix(each.key, ".gz"))[0], "application/octet-stream")
 
   # Define o Content-Encoding como 'gzip' se o arquivo for comprimido.
   content_encoding = endswith(each.key, ".gz") ? "gzip" : null
 
-  # Define a política de cache. Arquivos com hash são imutáveis.
+  # Política de cache: arquivos com hash são imutáveis.
   cache_control = strcontains(trimsuffix(each.key, ".gz"), "-") ? "public, max-age=31536000, immutable" : "public, max-age=0, must-revalidate"
 
-  # Usa o arquivo do disco como fonte. O Terraform gerencia o ETag.
+  # Usa o arquivo do disco como fonte e o ETag para detectar mudanças.
   source = each.value.source_path
+  etag   = each.value.digests.md5
 }
 
 data "aws_route53_zone" "cafesao-zone" {
