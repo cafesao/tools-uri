@@ -21,7 +21,7 @@ provider "aws" {
   profile = "personal"
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "bucket-tools-uri" {
   bucket = "tools-uri.cafesao.net"
 }
 
@@ -111,12 +111,12 @@ resource "aws_s3_object" "bucket-tools-uri-object" {
   etag = each.value.digests.md5
 }
 
-resource "aws_route53_zone" "cafesao-zone" {
+data "aws_route53_zone" "cafesao-zone" {
   name = "cafesao.net"
 }
 
 resource "aws_route53_record" "tools-uri-record" {
-  zone_id = aws_route53_zone.cafesao-zone.zone_id
+  zone_id = data.aws_route53_zone.cafesao-zone.zone_id
   name = "tools-uri.cafesao.net"
   type = "A"
   alias {
@@ -125,4 +125,9 @@ resource "aws_route53_record" "tools-uri-record" {
     evaluate_target_health = false
   }
   depends_on = [ aws_s3_bucket_website_configuration.bucket-tools-uri-website ]
+}
+
+output "website_url" {
+  description = "The URL of the website"
+  value       = "http://${aws_route53_record.tools-uri-record.name}"
 }

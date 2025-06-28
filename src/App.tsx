@@ -151,6 +151,51 @@ export default function App() {
 		return <>{parts}</>;
 	};
 
+	// Renderiza o resultado com highlight
+	const renderHighlightedResult = (text: string) => {
+		if (!hoveredParam || !text) return text;
+
+		// Encontrar todas as ocorrências do parâmetro no resultado
+		const regex = new RegExp(`([?&]${hoveredParam}=)([^&]*)`, "g");
+		let lastIndex = 0;
+		const parts = [];
+		let match: RegExpExecArray | null = null;
+
+		while (true) {
+			match = regex.exec(text);
+			if (match === null) break;
+			// Adicionar texto antes do match
+			if (match.index > lastIndex) {
+				parts.push(
+					<span key={`text-${lastIndex}`}>
+						{text.substring(lastIndex, match.index)}
+					</span>,
+				);
+			}
+
+			// Adicionar o parâmetro destacado
+			parts.push(
+				<span
+					key={`highlight-${match.index}`}
+					className="bg-purple-300 text-purple-900 rounded px-0.5"
+				>
+					{match[0]}
+				</span>,
+			);
+
+			lastIndex = match.index + match[0].length;
+		}
+
+		// Adicionar o texto restante
+		if (lastIndex < text.length) {
+			parts.push(
+				<span key={`text-end-${lastIndex}`}>{text.substring(lastIndex)}</span>,
+			);
+		}
+
+		return <>{parts}</>;
+	};
+
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-purple-50 via-purple-100 to-violet-100">
 			<div className="container mx-auto px-4 py-12 max-w-7xl">
@@ -283,7 +328,7 @@ export default function App() {
 													</motion.button>
 												</div>
 												<p className="text-gray-800 break-all font-mono text-sm">
-													{encoded}
+													{renderHighlightedResult(encoded)}
 												</p>
 											</motion.div>
 										)}
@@ -314,7 +359,9 @@ export default function App() {
 														)}
 													</motion.button>
 												</div>
-												<p className="text-gray-800 break-all">{decoded}</p>
+												<p className="text-gray-800 break-all">
+													{renderHighlightedResult(decoded)}
+												</p>
 											</motion.div>
 										)}
 									</AnimatePresence>
@@ -403,11 +450,21 @@ export default function App() {
 				</div>
 
 				<footer className="mt-12 text-center text-purple-600 text-sm">
-					<p>Feito com 💜 para desenvolvedores</p>
+					<p>
+						Feito com 💜 para desenvolvedores -{" "}
+						<a
+							href="https://cafesao.net"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="underline"
+						>
+							cafesao.net
+						</a>
+					</p>
 				</footer>
 			</div>
 
-			<style jsx>{`
+			<style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }
